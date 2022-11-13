@@ -11,9 +11,12 @@ def maidListView(request):
         maids = MaidUserProfile.objects.all()
         serializer = MaidUserProfileSerializer(maids, many=True)
         return JsonResponse(serializer.data, safe=False)
-    elif request.method == 'POST':
-        print(request)
-        json_data = JSONParser().parse(request)
-        print(json_data)
         
-        return JsonResponse({'message':'Post request'}, safe=False)
+    if request.method == 'POST':
+        json_data = JSONParser().parse(request)
+        serializer = MaidUserProfileSerializer(data=json_data)
+        if serializer.is_valid():
+            serializer.save()
+            return JsonResponse(serializer.data, safe=False)
+        else:
+            return JsonResponse(serializer.errors, safe=False)
