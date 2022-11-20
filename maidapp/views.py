@@ -1,22 +1,50 @@
 from django.shortcuts import render
-from django.http import JsonResponse
 from .models import MaidUserProfile
 from .serializers import MaidUserProfileSerializer
-from django.views.decorators.csrf import csrf_exempt
-from rest_framework.parsers import JSONParser
+from rest_framework import status
+from rest_framework.decorators import api_view
+from rest_framework.response import Response
+from rest_framework.views import APIView
+from django.http import Http404
+
 # Create your views here.
-@csrf_exempt
-def maidListView(request):
-    if request.method == 'GET':
+class MaidListView(APIView):
+    def get(self, request):
         maids = MaidUserProfile.objects.all()
         serializer = MaidUserProfileSerializer(maids, many=True)
-        return JsonResponse(serializer.data, safe=False)
-        
-    if request.method == 'POST':
-        json_data = JSONParser().parse(request)
-        serializer = MaidUserProfileSerializer(data=json_data)
+        return Response(serializer.data)
+    
+    def post(self, request):
+        serializer = MaidUserProfileSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
-            return JsonResponse(serializer.data, safe=False)
+            return Response(serializer.data)
         else:
-            return JsonResponse(serializer.errors, safe=False)
+            return Response(serializer.errors)
+
+class MaidDetailView(APIView):
+
+    def get_maid(self, pk):
+        try:
+            return MaidUserProfile.objects.get(pk=pk)
+        except MaidUserProfile.DoesNotExist:
+            raise Http404
+
+    def get(self, request , pk):
+        maid = self.get_maid(pk)
+        serializer = MaidUserProfileSerializer(maid)
+        return Response(serializer.data)
+
+    def delete(self, request, pk):
+        maid = self.get_maid(pk)
+        maid.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+    def put(self, request, pk):
+        maid = self.get_maid(pk)
+        serializer = MaidUserProfileSerializer(maid, data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        else:
+            return Response(serializer.errors)

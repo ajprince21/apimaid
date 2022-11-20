@@ -1,13 +1,14 @@
 from rest_framework import serializers
 from .models import MaidUserProfile
+from django.contrib.auth.models import User
 
-class MaidUserProfileSerializer(serializers.Serializer):
-    name = serializers.CharField(max_length=200)
-    email = serializers.EmailField()
-    password = serializers.CharField(max_length=30)
-    mobile_number = serializers.CharField(max_length=30)
-    address = serializers.CharField(max_length=200)
-    monthly_Charge = serializers.FloatField(required = False, allow_null=True)
+class MaidUserProfileSerializer(serializers.ModelSerializer):
+    class Meta:
+        model=MaidUserProfile
+        fields='__all__'
 
-    def create(self, validated_data):
-        return MaidUserProfile.objects.create(**validated_data)
+
+class UserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields='__all__'
